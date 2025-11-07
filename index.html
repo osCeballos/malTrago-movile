@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mal Trago Companion</title>
+    <!-- QRCode library needed for the QR functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Añadido favicon para evitar el error 404 en la consola -->
+    <link rel="icon" href="assets/dinkie-icons_skull.png" type="image/png">
+    <style>
+        @font-face {
+            font-family: 'PixelifySans';
+            src: url('assets/fonts/PixelifySans-VariableFont_wght.ttf') format('truetype');
+            font-style: normal;
+        }
+
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        img {
+            image-rendering: pixelated;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #180500;
+            background-image: url('assets/fondo.jpg');
+            background-repeat: no-repeat;
+            background-position: top center;
+            background-size: 100% auto;
+            background-attachment: scroll;
+            image-rendering: pixelated;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-family: 'PixelifySans';
+            min-height: 100vh;
+        }
+
+        /* Pantalla de bienvenida */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        #welcome-screen h1 {
+            margin: 20px 0;
+            font-size: 28px;
+        }
+
+        #name-input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            max-width: 300px;
+            font-family: 'PixelifySans';
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            color: white;
+            border-radius: 5px;
+        }
+
+        #avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Mantiene la estructura de 3 columnas */
+            gap: 15px;
+            width: 90%;
+            max-width: 600px; /* Aumentado para dar más espacio a las 9 tarjetas */
+            margin: 20px 0;
+            justify-content: center; /* Asegura que el grid esté centrado */
+        }
+
+        .avatar-card {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            transition: all 0.2s;
+        }
+
+        .avatar-card:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .avatar-card.selected {
+            border-color: #ffcc00;
+            background-color: rgba(255, 204, 0, 0.2);
+        }
+
+        .avatar-card img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+
+        .avatar-card .name {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #preview-section {
+            width: 90%;
+            max-width: 400px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #preview-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        #preview-name {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        #preview-desc {
+            font-size: 14px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        #create-player-btn {
+            padding: 12px 25px;
+            margin: 20px 0;
+            background-color: #ffcc00;
+            color: #180500;
+            border: none;
+            border-radius: 5px;
+            font-family: 'PixelifySans';
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #create-player-btn:hover {
+            background-color: #ffdd33;
+        }
+
+        /* Pantalla de juego */
+        #player-screen {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .estado-jugador > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .estado-jugador {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 85%;
+            height: 150px;
+            padding: 10px;
+            background-image: url('assets/fondo-estado.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            color: white;
+            overflow: hidden;
+            font-family: 'PixelifySans';
+            font-weight: 200;
+        }
+
+        .estado-jugador h1 {
+            font-weight: 400;
+            font-size: 25px;
+        }
+
+        .estado-jugador h2 {
+            font-size: 18px;
+            font-weight: 200;
+        }
+
+        .columna {
+            padding: 0px 30px;
+        }
+
+        .goblins {
+            position: relative;
+            width: 100vw;
+            max-width: 500px;
+            aspect-ratio: 4 / 3;
+            margin-top: 0px;
+            height: 100vw;
+            max-height: 10000px;
+        }
+
+        .goblin-img,
+        .mesa {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .goblin-img {
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            left: 0;
+        }
+
+        .mesa {
+            position: absolute;
+            z-index: 2;
+            top: 40vw;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: bottom;
+        }
+
+        .botones-ant-reto {
+            position: relative;
+            z-index: 9999;
+            display: flex;
+            width: 100vw;
+            height: auto;
+            margin: -100px 0px;
+            gap: 0px;
+            justify-content: space-around;
+        }
+
+        .botones-ant-reto .btn-antidotos {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            width: 45%;
+            height: 150px;
+            background-image: url('assets/fondo-pociones.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .botones-ant-reto .btn-retos {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 45%;
+            height: 150px;
+            background-image: url('assets/fondo-pociones.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+        }
+
+        .mano {
+            position: relative;
+            z-index: 9999;
+            display: flex;
+            width: 100vw;
+            padding: 0px 10px;
+            height: auto;
+            margin-top: 80px;
+            justify-content: space-around;
+        }
+
+        /* Elementos del juego añadidos */
+        .game-controls {
+            width: 90%;
+            max-width: 500px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .control-section h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #ffcc00;
+        }
+
+        .potion-cards {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        .card {
+            width: 60px;
+            height: 90px;
+            background-color: transparent; /* Fondo transparente para que se vea la imagen */
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            object-fit: cover; /* Asegura que la imagen cubra el área sin deformarse */
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .antidote-count {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            background-color: #ffcc00;
+            color: #180500;
+            border: none;
+            border-radius: 5px;
+            font-family: 'PixelifySans';
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #ffdd33;
+        }
+
+        .btn-small {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .spells-list, .log-list {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .spells-list li, .log-list li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: #ffcc00;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .card-effect {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: rgba(255, 204, 0, 0.2);
+            border-radius: 5px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de bienvenida/creación de personaje -->
+    <div id="welcome-screen">
+        <h1>Mal Trago Companion</h1>
+        <input type="text" id="name-input" placeholder="Introduce tu nombre">
+        
+        <div id="avatar-grid">
+            <!-- NOTA: Cambia los src por las imágenes de los diferentes goblins si las tienes -->
+            <div class="avatar-card" data-name="Goblin" data-desc="Un pequeño y astuto ser">
+                <img src="assets/goblins/goblin1.png" alt="Goblin">
+                <div class="name">Goblin</div>
+            </div>
+            <div class="avatar-card" data-name="Duende" data-desc="Criatura traviesa">
+                <img src="assets/goblins/goblin2.png" alt="Duende">
+                <div class="name">Duende</div>
+            </div>
+            <div class="avatar-card" data-name="Troll" data-desc="Ser grande y fuerte">
+                <img src="assets/goblins/goblin3.png" alt="Troll">
+                <div class="name">Troll</div>
+            </div>
+            <div class="avatar-card" data-name="Orco" data-desc="Guerrero feroz">
+                <img src="assets/goblins/goblin1.png" alt="Orco">
+                <div class="name">Orco</div>
+            </div>
+            <div class="avatar-card" data-name="Gnomo" data-desc="Ingenioso y pequeño">
+                <img src="assets/goblins/goblin1.png" alt="Gnomo">
+                <div class="name">Gnomo</div>
+            </div>
+            <div class="avatar-card" data-name="Kobold" data-desc="Astuto y sigiloso">
+                <img src="assets/goblins/goblin1.png" alt="Kobold">
+                <div class="name">Kobold</div>
+            </div>
+            <div class="avatar-card" data-name="Trasgo" data-desc="Perezoso pero astuto">
+                <img src="assets/goblins/goblin1.png" alt="Trasgo">
+                <div class="name">Trasgo</div>
+            </div>
+            <div class="avatar-card" data-name="Hobgoblin" data-desc="Líder militar">
+                <img src="assets/goblins/goblin1.png" alt="Hobgoblin">
+                <div class="name">Hobgoblin</div>
+            </div>
+            <div class="avatar-card" data-name="Boggart" data-desc="Espíritu del bosque">
+                <img src="assets/goblins/goblin1.png" alt="Boggart">
+                <div class="name">Boggart</div>
+            </div>
+        </div>
+        
+        <div id="preview-section">
+            <img id="preview-img" src="" alt="Avatar preview" style="display: none;">
+            <div id="preview-name">Selecciona un avatar</div>
+            <div id="preview-desc">Elige tu personaje</div>
+        </div>
+        
+        <button id="create-player-btn">Crear Personaje</button>
+    </div>
+    
+    <!-- Pantalla de juego -->
+    <div id="player-screen">
+        <div class="estado-jugador">
+            <div class="columna">
+                <h1 class="personaje" id="player-name">Oscar</h1>
+                <h2 class="nombre" id="player-avatar">Muelik'o</h2>
+            </div>
+            <div class="columna">
+                <img src="assets/dinkie-icons_skull.png" alt="Estado" class="estado-label" />
+                <div class="estado">
+                    <span class="vivo" id="player-state">VIVO</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="goblins">
+            <!-- Añadido id para poder modificarlo dinámicamente -->
+            <img id="goblin-img" class="goblin-img" src="assets/goblins/goblin1.png" alt="">
+            <img class="mesa" src="assets/mesa.png" alt="">
+        </div>
+        
+        <div class="botones-ant-reto">
+            <div class="btn-antidotos" id="antidote-section">
+                <img class="img-antidoto" src="assets/pocion.png" alt="">
+                <span class="antidotos" id="antidote-count">3</span>
+                <span class="boton-mas" id="antidote-increase">+</span>
+            </div>
+            
+            <div class="btn-retos" id="draw-btn">
+                <p>Retos</p>
+            </div>
+        </div>
+        
+        <div class="mano">
+            <div id="potion-cards" class="potion-cards">
+                <!-- Cartas de pociones se generarán dinámicamente -->
+            </div>
+        </div>
+        
+        <!-- Controles adicionales del juego -->
+        <div class="game-controls">
+            <!-- Sección de pociones eliminada como se solicitó -->
+            
+            <div class="control-section">
+                <h3>Carta Actual</h3>
+                <div id="card-effect" class="card-effect">Roba una carta para ver su efecto</div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Conjuros Activos</h3>
+                <ul id="spells-list" class="spells-list">
+                    <li>No hay conjuros activos</li>
+                </ul>
+            </div>
+            
+            <div class="control-section">
+                <h3>Registro de Eventos</h3>
+                <ul id="log-list" class="log-list">
+                    <li>Inicio del juego</li>
+                </ul>
+            </div>
+            
+            <div class="button-group">
+                <button id="reset-btn" class="btn">Reiniciar</button>
+                <button id="export-btn" class="btn">Exportar</button>
+                <button id="import-btn" class="btn">Importar</button>
+                <input type="file" id="file-input" class="file-input" accept=".json">
+                <button id="qr-btn" class="btn">Código QR</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para QR -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Código QR</h2>
+                <button id="close-qr-btn" class="close-btn">&times;</button>
+            </div>
+            <div id="qr-code"></div>
+        </div>
+    </div>
+
+    <script>
+        // spells.js
+        // Mazo de conjuros controlado desde código. Cárgalo **antes** de app.js en tu HTML.
+        
+        window.SPELLS_DECK = window.SPELLS_DECK || [];
+        if (!window.registerSpell) {
+            window.registerSpell = function(def) {
+                if (!def || !def.id) return console.warn('registerSpell requiere un id');
+                window.SPELLS_DECK.push(def);
+            };
+        }
+        
+        // -------------------- CARTAS: unos cuantos spells --------------------
+        
+        registerSpell({
+            id: 'silencio',
+            titulo: 'Silencio',
+            texto: 'Nadie puede hablar durante 1 turno (aplicar por el grupo).',
+            persistent: true,
+            execute: (ctx) => {
+                ctx.state.player.conjuros.push({
+                    id: 'silencio',
+                    titulo: 'Silencio',
+                    texto: 'Nadie puede hablar durante 1 turno',
+                    aplicado_por: ctx.state.player.name,
+                    duration: 1
+                });
+                ctx.addLog('Conjuro: Silencio (1 turno).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'hurto',
+            titulo: 'Hurto',
+            texto: 'Roba 1 antídoto a un jugador vecino (aplicar físicamente).',
+            persistent: false,
+            execute: (ctx) => {
+                // En single-device no hay otros jugadores: dejamos una instrucción en el log.
+                ctx.addLog('Hurto: roba 1 antídoto a un jugador vecino (aplicar físicamente).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'antidoto_extra',
+            titulo: 'Antídoto extra',
+            texto: 'Ganas 1 antídoto inmediatamente.',
+            persistent: false,
+            execute: (ctx) => {
+                ctx.state.player.antidotos = (ctx.state.player.antidotos || 0) + 1;
+                ctx.addLog('Carta: Antídoto extra. +1 antídoto.');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'proteccion',
+            titulo: 'Protección inmediata',
+            texto: 'Evitas la siguiente poción mortal (consumible).',
+            persistent: true,
+            execute: (ctx) => {
+                ctx.state.player.conjuros.push({
+                    id: 'proteccion',
+                    titulo: 'Protección inmediata',
+                    texto: 'Anula la siguiente poción mortal',
+                    aplicado_por: ctx.state.player.name,
+                    uses: 1
+                });
+                ctx.addLog('Conjuro: Protección aplicada (1 uso).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'confusion',
+            titulo: 'Confusión',
+            texto: 'El siguiente jugador pierde 1 turno (aplicar físicamente).',
+            persistent: false,
+            execute: (ctx) => {
+                ctx.addLog('Confusión: siguiente jugador pierde 1 turno (aplicar físicamente).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'robo_masivo',
+            titulo: 'Robo masivo',
+            texto: 'Roba hasta 2 antídotos repartidos entre jugadores (aplicar físicamente).',
+            persistent: false,
+            execute: (ctx) => {
+                ctx.addLog('Robo masivo: roba hasta 2 antídotos (aplicar físicamente).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'intercambio_pociones',
+            titulo: 'Intercambio forzado',
+            texto: 'Todos los jugadores intercambian su carta más a la izquierda con su vecino (aplicar físicamente).',
+            persistent: false,
+            execute: (ctx) => {
+                ctx.addLog('Intercambio forzado: el grupo debe intercambiar cartas según la regla.');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'curacion',
+            titulo: 'Curación',
+            texto: 'Si estás en estado fantasma, vuelves a la vida. Si no, nada ocurre.',
+            persistent: false,
+            execute: (ctx) => {
+                if (ctx.state.player.state === 'ghost') {
+                    ctx.state.player.state = 'alive';
+                    ctx.addLog('Curación: volviste a la vida.');
+                } else {
+                    ctx.addLog('Curación: no tenías efecto (no estabas fantasma).');
+                }
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'duplicar_antidoto',
+            titulo: 'Duplicar antídoto',
+            texto: 'Ganas 1 antídoto adicional (no acumulativo más allá de sentido común).',
+            persistent: false,
+            execute: (ctx) => {
+                ctx.state.player.antidotos = (ctx.state.player.antidotos || 0) + 1;
+                ctx.addLog('Duplicar antídoto: +1 antídoto.');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'sombra',
+            titulo: 'Sombra protectora',
+            texto: 'Protege la siguiente revelación (1 vez).',
+            persistent: true,
+            execute: (ctx) => {
+                ctx.state.player.conjuros.push({
+                    id: 'sombra',
+                    titulo: 'Sombra protectora',
+                    texto: 'Protege la siguiente revelación',
+                    aplicado_por: ctx.state.player.name,
+                    uses: 1
+                });
+                ctx.addLog('Conjuro: Sombra protectora (1 uso).');
+                ctx.updateUI();
+            }
+        });
+        
+        registerSpell({
+            id: 'cambio_suerte',
+            titulo: 'Cambio de suerte',
+            texto: 'Baraja de nuevo tus pociones (se re-generan aleatoriamente).',
+            persistent: false,
+            execute: (ctx) => {
+                // regenerate potions: función simple
+                const total = ctx.state.player.potions.length + ctx.state.player.potions_discard.length;
+                // Si no hay info del total (estado inicial), fuerza 4
+                const n = total > 0 ? total : 4;
+                ctx.state.player.potions = [];
+                const numMortal = Math.round(n * (ctx.state.player.settings?.ratio_mortal || 0.25));
+                let mortals = 0;
+                for (let i = 0; i < n; i++) {
+                    if (Math.random() < (ctx.state.player.settings?.ratio_mortal || 0.25) && mortals < numMortal) {
+                        ctx.state.player.potions.push('mortal');
+                        mortals++;
+                    } else {
+                        ctx.state.player.potions.push('safe');
+                    }
+                }
+                if (!ctx.state.player.potions.includes('mortal')) ctx.state.player.potions[0] = 'mortal';
+                // mezclar
+                for (let i = ctx.state.player.potions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [ctx.state.player.potions[i], ctx.state.player.potions[j]] = [ctx.state.player.potions[j], ctx.state.player.potions[i]];
+                }
+                ctx.addLog('Cambio de suerte: tus pociones han sido re-barajadas.');
+                ctx.updateUI();
+            }
+        });
+        
+        // app.js
+        // Lógica completa integrada con selector por imágenes.
+        
+        (function () {
+            document.addEventListener('DOMContentLoaded', function() {
+        
+                // --- DOM ---
+                const welcomeScreen = document.getElementById('welcome-screen');
+                const playerScreen = document.getElementById('player-screen');
+                const nameInput = document.getElementById('name-input');
+                const avatarGrid = document.getElementById('avatar-grid');
+                const createBtn = document.getElementById('create-player-btn');
+        
+                const playerNameEl = document.getElementById('player-name');
+                const playerAvatarEl = document.getElementById('player-avatar');
+                const playerStateEl = document.getElementById('player-state');
+                const goblinImgEl = document.getElementById('goblin-img'); // Añadido
+        
+                const potionCardsEl = document.getElementById('potion-cards');
+                const antidoteCountEl = document.getElementById('antidote-count');
+                const antidoteIncBtn = document.getElementById('antidote-increase');
+                const drawBtn = document.getElementById('draw-btn');
+                const cardEffectEl = document.getElementById('card-effect');
+                const spellsListEl = document.getElementById('spells-list');
+                const logListEl = document.getElementById('log-list');
+                const resetBtn = document.getElementById('reset-btn');
+                const exportBtn = document.getElementById('export-btn');
+                const importBtn = document.getElementById('import-btn');
+                const fileInput = document.getElementById('file-input');
+                const qrBtn = document.getElementById('qr-btn');
+                const qrModal = document.getElementById('qr-modal');
+                const qrCodeEl = document.getElementById('qr-code');
+                const closeQrBtn = document.getElementById('close-qr-btn');
+        
+                // preview elements
+                const previewImg = document.getElementById('preview-img');
+                const previewName = document.getElementById('preview-name');
+                const previewDesc = document.getElementById('preview-desc');
+        
+                // dynamic buttons
+                let replenishBtn = null;
+                let reviveBtn = null;
+        
+                // selection state (avatar)
+                let selectedAvatarData = null;
+        
+                // --- Estado inicial ---
+                let state = {
+                    version: "1.1",
+                    player: {
+                        id: "",
+                        name: "",
+                        avatar: "",
+                        avatar_img: "",
+                        avatar_desc: "",
+                        state: "alive",
+                        potions: [],
+                        potions_discard: [],
+                        antidotos: 1,
+                        conjuros: [],
+                        log: [],
+                        settings: {
+                            beztia: false,
+                            initial_antidotos: 1,
+                            ratio_mortal: 0.25
+                        }
+                    }
+                };
+        
+                // --- Utilidades ---
+                function saveState() {
+                    localStorage.setItem('mt_companion_state', JSON.stringify(state));
+                }
+                function loadState() {
+                    const saved = localStorage.getItem('mt_companion_state');
+                    if (saved) {
+                        try {
+                            state = JSON.parse(saved);
+                            return true;
+                        } catch (e) {
+                            console.error('Error parsing saved state', e);
+                        }
+                    }
+                    return false;
+                }
+                function shuffleArray(arr) {
+                    for (let i = arr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    }
+                    return arr;
+                }
+                function addLog(evt) {
+                    const ts = new Date().toISOString().slice(11, 19);
+                    state.player.log.push({ ts: ts, evento: evt });
+                    saveState();
+                }
+        
+                // --- Avatar grid: UI + selección ---
+                function clearAvatarSelectionUI() {
+                    const cards = avatarGrid.querySelectorAll('.avatar-card');
+                    cards.forEach(c => c.classList.remove('selected'));
+                }
+        
+                function selectAvatarCard(cardEl) {
+                    clearAvatarSelectionUI();
+                    cardEl.classList.add('selected');
+                    selectedAvatarData = {
+                        name: cardEl.dataset.name || '',
+                        desc: cardEl.dataset.desc || '',
+                        img: (cardEl.querySelector('img') && cardEl.querySelector('img').src) || ''
+                    };
+                    if (selectedAvatarData.img) {
+                        previewImg.src = selectedAvatarData.img;
+                        previewImg.style.display = '';
+                        previewImg.alt = selectedAvatarData.name || 'avatar';
+                    } else {
+                        previewImg.style.display = 'none';
+                    }
+                    previewName.textContent = selectedAvatarData.name || 'Sin nombre';
+                    previewDesc.textContent = selectedAvatarData.desc || '';
+                }
+        
+                if (avatarGrid) {
+                    const cards = avatarGrid.querySelectorAll('.avatar-card');
+                    cards.forEach(card => {
+                        card.addEventListener('click', () => selectAvatarCard(card));
+                        card.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                selectAvatarCard(card);
+                            }
+                        });
+                    });
+                }
+        
+                // --- Reponer / Revivir botones dinámicos ---
+                function ensureReplenishButton() {
+                    if (replenishBtn) return;
+                    replenishBtn = document.createElement('button');
+                    replenishBtn.id = 'replenish-btn';
+                    replenishBtn.textContent = 'Reponer mano (2 buenas, 1 mala)';
+                    replenishBtn.className = 'btn';
+                    replenishBtn.style.marginTop = '8px';
+                    replenishBtn.addEventListener('click', replenishHand);
+                    if (potionCardsEl && potionCardsEl.parentNode) {
+                        potionCardsEl.parentNode.insertBefore(replenishBtn, potionCardsEl.nextSibling);
+                    } else if (playerScreen) {
+                        playerScreen.appendChild(replenishBtn);
+                    }
+                }
+                function removeReplenishButton() {
+                    if (replenishBtn && replenishBtn.parentNode) replenishBtn.parentNode.removeChild(replenishBtn);
+                    replenishBtn = null;
+                }
+                function replenishHand() {
+                    state.player.potions = ['safe','safe','mortal'];
+                    shuffleArray(state.player.potions);
+                    addLog('Se repuso la mano: 2 seguras y 1 mortal.');
+                    saveState();
+                    updateUI();
+                    removeReplenishButton();
+                }
+        
+                function ensureReviveButton() {
+                    if (reviveBtn) return;
+                    reviveBtn = document.createElement('button');
+                    reviveBtn.id = 'revive-btn';
+                    reviveBtn.textContent = 'Revivir';
+                    reviveBtn.className = 'btn';
+                    reviveBtn.style.marginTop = '8px';
+                    reviveBtn.addEventListener('click', revivePlayer);
+                    if (potionCardsEl && potionCardsEl.parentNode) {
+                        potionCardsEl.parentNode.insertBefore(reviveBtn, potionCardsEl.nextSibling);
+                    } else if (playerScreen) {
+                        playerScreen.appendChild(reviveBtn);
+                    }
+                }
+                function removeReviveButton() {
+                    if (reviveBtn && reviveBtn.parentNode) reviveBtn.parentNode.removeChild(reviveBtn);
+                    reviveBtn = null;
+                }
+                function revivePlayer() {
+                    if (!confirm('¿Seguro que quieres revivir?')) return;
+                    state.player.state = 'alive';
+                    addLog('Jugador revivido manualmente.');
+                    saveState();
+                    updateUI();
+                }
+        
+                // --- Juego: pociones, cartas, UI ---
+                function generatePotions() {
+                    state.player.potions = [];
+                    const total = 4;
+                    const numMortal = Math.round(total * state.player.settings.ratio_mortal);
+                    let mortals = 0;
+                    for (let i = 0; i < total; i++) {
+                        if (Math.random() < state.player.settings.ratio_mortal && mortals < numMortal) {
+                            state.player.potions.push('mortal'); mortals++;
+                        } else {
+                            state.player.potions.push('safe');
+                        }
+                    }
+                    if (!state.player.potions.includes('mortal')) state.player.potions[0] = 'mortal';
+                    state.player.potions = shuffleArray(state.player.potions);
+                }
+        
+                function updateUI() {
+                    playerNameEl.textContent = state.player.name || '';
+                    // Mostrar solo el nombre del goblin, sin imagen
+                    playerAvatarEl.textContent = state.player.avatar || '';
+                    playerStateEl.textContent = state.player.state || '';
+        
+                    // CAMBIO: Actualizar la imagen del goblin en la pantalla de juego
+                    if (goblinImgEl && state.player.avatar_img) {
+                        goblinImgEl.src = state.player.avatar_img;
+                    }
+        
+                    // pociones - ahora usando imágenes
+                    potionCardsEl.innerHTML = '';
+                    state.player.potions.forEach((potion, index) => {
+                        const card = document.createElement('img');
+                        card.classList.add('card');
+                        card.dataset.index = index;
+                        card.src = 'assets/carta.png'; // Usar el asset de la carta
+                        card.alt = 'Carta de poción';
+                        // Añadir evento click para revelar poción
+                        card.addEventListener('click', () => revealPotionByIndex(index));
+                        potionCardsEl.appendChild(card);
+                    });
+        
+                    // antídotos - solo se actualiza el contador principal
+                    antidoteCountEl.textContent = state.player.antidotos;
+        
+                    // log
+                    logListEl.innerHTML = '';
+                    (state.player.log || []).forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item.ts + ' — ' + item.evento;
+                        logListEl.appendChild(li);
+                    });
+        
+                    // conjuros
+                    spellsListEl.innerHTML = '';
+                    (state.player.conjuros || []).forEach(c => {
+                        const li = document.createElement('li');
+                        const meta = c.duration ? ` (turnos: ${c.duration})` : (c.uses ? ` (usos: ${c.uses})` : '');
+                        li.textContent = c.titulo + ': ' + c.texto + (c.aplicado_por ? ' (por ' + c.aplicado_por + ')' : '') + meta;
+                        spellsListEl.appendChild(li);
+                    });
+        
+                    if ((state.player.potions || []).length === 0) ensureReplenishButton(); else removeReplenishButton();
+                    if (state.player.state === 'ghost') ensureReviveButton(); else removeReviveButton();
+                }
+        
+                function createPlayer() {
+                    if (!nameInput.value) { alert('Ingresa tu nombre.'); return; }
+        
+                    // si no seleccionó avatar, tomar el primero del grid como fallback
+                    if (!selectedAvatarData) {
+                        const first = avatarGrid.querySelector('.avatar-card');
+                        if (first) selectAvatarCard(first);
+                    }
+        
+                    state.player.id = 'player-' + Date.now();
+                    state.player.name = nameInput.value;
+                    state.player.avatar = selectedAvatarData ? selectedAvatarData.name : 'Goblin';
+                    state.player.avatar_img = selectedAvatarData ? selectedAvatarData.img : '';
+                    state.player.avatar_desc = selectedAvatarData ? selectedAvatarData.desc : '';
+                    state.player.state = 'alive';
+                    state.player.antidotos = state.player.settings.initial_antidotos;
+                    state.player.potions_discard = [];
+                    state.player.conjuros = [];
+                    state.player.log = [];
+                    generatePotions();
+                    saveState();
+                    welcomeScreen.style.display = 'none';
+                    playerScreen.style.display = 'flex';
+                    updateUI();
+                }
+        
+                function revealPotionByIndex(index) {
+                    if (state.player.state === 'ghost') { alert('Estás en estado fantasma y no puedes beber.'); return; }
+                    if (!state.player.potions || state.player.potions.length === 0) { alert('No hay más pociones para revelar. Usa el botón para reponer la mano.'); return; }
+                    if (index < 0 || index >= state.player.potions.length) { return; }
+        
+                    const result = state.player.potions[index];
+                    // Eliminar la carta revelada
+                    state.player.potions.splice(index, 1);
+                    
+                    if (result === 'mortal') {
+                        const protIndex = state.player.conjuros.findIndex(c => c.id === 'proteccion' && (c.uses === undefined || c.uses > 0));
+                        if (protIndex !== -1) {
+                            const prot = state.player.conjuros[protIndex];
+                            if (prot.uses !== undefined) {
+                                prot.uses--;
+                                addLog('Protección activa: anuló una poción mortal (usos restantes: ' + prot.uses + ').');
+                                if (prot.uses <= 0) state.player.conjuros.splice(protIndex, 1);
+                            } else {
+                                state.player.conjuros.splice(protIndex, 1);
+                                addLog('Protección activa consumida: anuló una poción mortal.');
+                            }
+                            state.player.potions_discard.push('mortal');
+                        } else {
+                            if (state.player.antidotos > 0) {
+                                const usar = confirm('¡Poción mortal! ¿Deseas usar un antídoto?');
+                                if (usar) {
+                                    state.player.antidotos--;
+                                    state.player.potions_discard.push('mortal');
+                                    addLog('Revelaste: mortal. Usaste antídoto.');
+                                } else {
+                                    state.player.state = 'ghost';
+                                    addLog('Revelaste: mortal. No usaste antídoto. Te conviertes en fantasma.');
+                                }
+                            } else {
+                                state.player.state = 'ghost';
+                                addLog('Revelaste: mortal y no tenías antídoto. Eres fantasma.');
+                            }
+                        }
+                    } else {
+                        state.player.potions_discard.push('safe');
+                        addLog('Revelaste: segura.');
+                    }
+                    if (state.player.potions.length === 0) ensureReplenishButton();
+                    saveState();
+                    updateUI();
+                }
+        
+                function applyCard(card) {
+                    const ctx = { state, addLog, updateUI };
+                    if (typeof card.execute === 'function') {
+                        try { card.execute(ctx); } catch (e) { console.error('Error ejecutando carta', card.id, e); addLog('Error al ejecutar carta: ' + card.titulo); }
+                    } else {
+                        if (card.persistent) {
+                            state.player.conjuros.push({ id: card.id, titulo: card.titulo, texto: card.texto, aplicado_por: state.player.name });
+                            addLog('Conjuro activo aplicado: ' + card.titulo);
+                        } else {
+                            addLog('Robaste carta: ' + card.titulo + ' — ' + card.texto);
+                        }
+                    }
+                }
+        
+                function drawCard() {
+                    const deck = window.SPELLS_DECK || [];
+                    if (deck.length === 0) {
+                        cardEffectEl.textContent = 'El mazo está vacío.';
+                        addLog('Intentaste robar carta pero el mazo está vacío.');
+                        return;
+                    }
+                    const card = deck[Math.floor(Math.random() * deck.length)];
+                    cardEffectEl.textContent = card.titulo + ': ' + card.texto;
+                    addLog('Robaste carta: ' + card.titulo);
+                    applyCard(card);
+                    saveState();
+                    updateUI();
+                }
+        
+                // --- Listeners ---
+                antidoteIncBtn.addEventListener('click', () => { 
+                    state.player.antidotos++; 
+                    saveState(); 
+                    updateUI(); 
+                });
+        
+                createBtn.addEventListener('click', createPlayer);
+                drawBtn.addEventListener('click', drawCard);
+                resetBtn.addEventListener('click', () => { 
+                    if (confirm('¿Seguro que quieres reiniciar la ficha?')) { 
+                        localStorage.removeItem('mt_companion_state'); 
+                        location.reload(); 
+                    } 
+                });
+        
+                exportBtn.addEventListener('click', () => {
+                    const dataStr = JSON.stringify(state);
+                    const blob = new Blob([dataStr], {type: "application/json"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; 
+                    a.download = 'mal_trago_ficha.json'; 
+                    a.click(); 
+                    URL.revokeObjectURL(url);
+                });
+                
+                importBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files[0]; 
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            state = imported;
+                            saveState();
+                            updateUI();
+                            welcomeScreen.style.display = 'none';
+                            playerScreen.style.display = 'flex';
+                        } catch (err) {
+                            alert('Error al importar JSON.');
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+        
+                qrBtn.addEventListener('click', () => {
+                    qrModal.style.display = 'flex'; 
+                    qrCodeEl.innerHTML = '';
+                    new QRCode(qrCodeEl, { 
+                        text: JSON.stringify(state), 
+                        width: 200, 
+                        height: 200 
+                    });
+                });
+                
+                closeQrBtn.addEventListener('click', () => { 
+                    qrModal.style.display = 'none'; 
+                });
+        
+                // --- Load saved state if exists ---
+                // Siempre mostrar la pantalla de bienvenida al cargar, sin importar si hay un estado guardado
+                // Esto asegura que el usuario siempre pueda crear un nuevo personaje o modificar el existente
+                if (loadState()) {
+                    // Si hay un estado guardado, pre-llenar los campos
+                    if (state.player.name) {
+                        nameInput.value = state.player.name;
+                    }
+                    if (state.player.avatar_img) {
+                        previewImg.src = state.player.avatar_img;
+                        previewImg.style.display = '';
+                        previewName.textContent = state.player.avatar || 'Goblin';
+                        previewDesc.textContent = state.player.avatar_desc || '';
+                        // marcar tarjeta si concuerda
+                        const cards = avatarGrid.querySelectorAll('.avatar-card');
+                        cards.forEach(c => {
+                            const img = c.querySelector('img');
+                            if (img && img.src === state.player.avatar_img) {
+                                c.classList.add('selected');
+                                selectedAvatarData = { 
+                                    name: c.dataset.name, 
+                                    desc: c.dataset.desc, 
+                                    img: img.src 
+                                };
+                            }
+                        });
+                    }
+                }
+        
+            });
+        })();
+    </script>
+</body>
+</html> 
